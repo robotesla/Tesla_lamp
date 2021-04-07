@@ -42,6 +42,7 @@ int numMax = 10;
 int Max = 60;
 
 PImage m;
+PImage v;
 String portName;
 
 color[] LED = new color[Max];
@@ -170,10 +171,12 @@ void write_pic()
       String s;
       if (j%2==0)
       {
-        s = str(i+j*60)+","+int(red(LED_PIC[i+j*60]))+","+int(green(LED_PIC[i+j*60]))+","+int(blue(LED_PIC[i+j*60]))+","+int(0)+".";
+        s = str(i+j*60)+","+int(red(LED_PIC[i+j*60]))+","+int(green(LED_PIC[i+j*60]))+","+int(blue(LED_PIC[i+j*60]))+","+int(0)+"."; 
+        //s = str((j+1)*60-i-1)+","+int(red(LED_PIC[(j+1)*60-i-1]))+","+int(green(LED_PIC[(j+1)*60-i-1]))+","+int(blue(LED_PIC[(j+1)*60-i-1]))+","+int(0)+".";
       } else
       {
-        s = str((j+1)*60-i-1)+","+int(red(LED_PIC[(j+1)*60-i-1]))+","+int(green(LED_PIC[(j+1)*60-i-1]))+","+int(blue(LED_PIC[(j+1)*60-i-1]))+","+int(0)+".";
+        //s = str(i+j*60)+","+int(red(LED_PIC[i+j*60]))+","+int(green(LED_PIC[i+j*60]))+","+int(blue(LED_PIC[i+j*60]))+","+int(0)+".";
+        s = str(i+j*60)+","+int(red(LED_PIC[(j+1)*60-i-1]))+","+int(green(LED_PIC[(j+1)*60-i-1]))+","+int(blue(LED_PIC[(j+1)*60-i-1]))+","+int(0)+".";
       }
       myPort.write(s);
       delay(10);
@@ -194,23 +197,23 @@ void update_color()
     LED[i] = color(r, g, b, a);
     //println(LED[i]);
   }
-  for (int i = 0; i<5; i++)
-  {
-    for (int j = 0; j<Max; j++)
+  if (m !=null) {
+    for (int i = 0; i<5; i++)
     {
-      //println("i:"+str(i)+"j:"+str(j));
-      //println("(i*60)+j = "+str((i*60)+j));
-      color c = m.get(i, j);
-      //println("LED_PIC["+str((i*60)+j)+"]");
-      LED_PIC[(i*60)+j] = color(c);
-      println(LED_PIC[(i*60)+j]);
+      for (int j = 0; j<Max; j++)
+      {
+        //println("i:"+str(i)+"j:"+str(j));
+        //println("(i*60)+j = "+str((i*60)+j));
+        color c = m.get(i, j);
+        //println("LED_PIC["+str((i*60)+j)+"]");
+        LED_PIC[(i*60)+j] = color(c);
+        println(LED_PIC[(i*60)+j]);
+      }
     }
   }
 }
 
 void controlEvent(ControlEvent theEvent) {
-
-
 
 
   if (theEvent.isFrom(d1)) 
@@ -292,6 +295,8 @@ void draw() {
 
     if (m !=null) {
       m.resize(5, 60);
+      //v = m;
+      //v.resize(20, 60);
       image(m, 10, 10);
     }
   }
