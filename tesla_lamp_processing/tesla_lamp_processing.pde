@@ -17,16 +17,18 @@
 
 import controlP5.*;
 import processing.serial.*;
+import drop.*;
 
 ControlP5 cp5;
 DropdownList d1;
 //ColorPicker cp;
 Button b1;
 Button b2;
+Button b3;
 ColorPicker cw;
 Textlabel label_com;
 Range range;
-
+SDrop drop;
 Serial myPort;  // Create object from Serial class
 
 
@@ -39,16 +41,23 @@ int numMin = 0;
 int numMax = 10;
 int Max = 60;
 
+PImage m;
 String portName;
 
 color[] LED = new color[Max];
+color[] LED_PIC = new color[Max*5];
 
 void setup() {
   size(1000, 400 );
+  drop = new SDrop(this);
 
   for (int i = 0; i<Max; i++)
   {
     LED[i] = color(r, g, b);
+  }
+  for (int i = 0; i<Max*5; i++)
+  {
+    LED_PIC[i] = color(r, g, b);
   }
 
 
@@ -68,9 +77,16 @@ void setup() {
     ;
 
 
-  b2 = cp5.addButton("SEND!")
+  b2 = cp5.addButton("SEND_LINE!")
     //.setValue(0)
     .setPosition(100, 70)
+    .setSize(100, 19)
+    ;
+
+
+  b3 = cp5.addButton("SEND_PIC!")
+    //.setValue(0)
+    .setPosition(250, 70)
     .setSize(100, 19)
     ;
 
@@ -119,10 +135,8 @@ void customize(DropdownList ddl) {
   ddl.setColorActive(color(255, 128));
 }
 
-void write()
+void write_line()
 {
-
-
   for (int j = 0; j<5; j++)
   {
     for (int i = 0; i<Max; i++)
@@ -131,23 +145,46 @@ void write()
       if (j%2==0)
       {
         s = str(i+j*60)+","+int(red(LED[i]))+","+int(green(LED[i]))+","+int(blue(LED[i]))+","+int(alpha(LED[i]))+".";
-        
       } else
       {
         s = str((j+1)*60-i-1)+","+int(red(LED[i]))+","+int(green(LED[i]))+","+int(blue(LED[i]))+","+int(alpha(LED[i]))+".";
       }
       myPort.write(s);
       delay(10);
-      print("read");
-      print(myPort.readString());
+      print("read:");
+      println(myPort.readString());
       //print("i:");print(i);
       //print("j:");print(j);
       //print("255,0,255,0,0,");
       println(s);
-      
     }
   }
-  
+}
+
+void write_pic()
+{
+  for (int j = 0; j<5; j++)
+  {
+    for (int i = 0; i<Max; i++)
+    {
+      String s;
+      if (j%2==0)
+      {
+        s = str(i+j*60)+","+int(red(LED_PIC[i+j*60]))+","+int(green(LED_PIC[i+j*60]))+","+int(blue(LED_PIC[i+j*60]))+","+int(0)+".";
+      } else
+      {
+        s = str((j+1)*60-i-1)+","+int(red(LED_PIC[(j+1)*60-i-1]))+","+int(green(LED_PIC[(j+1)*60-i-1]))+","+int(blue(LED_PIC[(j+1)*60-i-1]))+","+int(0)+".";
+      }
+      myPort.write(s);
+      delay(10);
+      print("read:");
+      println(myPort.readString());
+      //print("i:");print(i);
+      //print("j:");print(j);
+      //print("255,0,255,0,0,");
+      println(s);
+    }
+  }
 }
 
 void update_color()
@@ -155,6 +192,19 @@ void update_color()
   for (int i = numMin; i<numMax+1; i++)
   {
     LED[i] = color(r, g, b, a);
+    //println(LED[i]);
+  }
+  for (int i = 0; i<5; i++)
+  {
+    for (int j = 0; j<Max; j++)
+    {
+      //println("i:"+str(i)+"j:"+str(j));
+      //println("(i*60)+j = "+str((i*60)+j));
+      color c = m.get(i, j);
+      //println("LED_PIC["+str((i*60)+j)+"]");
+      LED_PIC[(i*60)+j] = color(c);
+      println(LED_PIC[(i*60)+j]);
+    }
   }
 }
 
@@ -166,15 +216,26 @@ void controlEvent(ControlEvent theEvent) {
   if (theEvent.isFrom(d1)) 
   {
     portName = Serial.list()[int(theEvent.getController().getValue())];
-    myPort = new Serial(this, portName, 250000);
+    myPort = new Serial(this, portName, 115200);
   }
 
   if (theEvent.isFrom(b2)) 
   {
     //portName = Serial.list()[int(theEvent.getController().getValue())];
-    write();
+    write_line();
   }
 
+  if (theEvent.isFrom(b2)) 
+  {
+    //portName = Serial.list()[int(theEvent.getController().getValue())];
+    write_line();
+  }
+
+  if (theEvent.isFrom(b3)) 
+  {
+    //portName = Serial.list()[int(theEvent.getController().getValue())];
+    write_pic();
+  }
   if (theEvent.isFrom(b1)) 
   {
     //portName = Serial.list()[int(theEvent.getController().getValue())];
@@ -213,198 +274,35 @@ void draw() {
   noStroke();
   int n = 0;
   if (millis()%500>250)
-  {n = 1;}
+  {
+    n = 1;
+  }
   for (int i=0; i<LED.length; i++) {
     if (numMin-1<i && i<numMax+1) 
     {
-      if(n>0)
+      if (n>0)
       {
-      fill(LED[i]);
-      }
-      else fill(color(r,g,b));
-    }
-    else fill(color(red(LED[i]),green(LED[i]),blue(LED[i])));
-    
+        fill(LED[i]);
+      } else fill(color(r, g, b));
+    } else fill(color(red(LED[i]), green(LED[i]), blue(LED[i])));
+
     rect(70+i*8, 280, 3, 30);
     fill(alpha(LED[i]));
     rect(70+i*8, 320, 3, 30);
+
+    if (m !=null) {
+      m.resize(5, 60);
+      image(m, 10, 10);
+    }
   }
 }
 
-/* 
- a list of all methods available for the DropdownList Controller
- use ControlP5.printPublicMethodsFor(DropdownList.class);
- to print the following list into the console.
- 
- You can find further details about class DropdownList in the javadoc.
- 
- Format:
- ClassName : returnType methodName(parameter type)
- 
- 
- controlP5.Controller : CColor getColor() 
- controlP5.Controller : ControlBehavior getBehavior() 
- controlP5.Controller : ControlWindow getControlWindow() 
- controlP5.Controller : ControlWindow getWindow() 
- controlP5.Controller : ControllerProperty getProperty(String) 
- controlP5.Controller : ControllerProperty getProperty(String, String) 
- controlP5.Controller : ControllerView getView() 
- controlP5.Controller : DropdownList addCallback(CallbackListener) 
- controlP5.Controller : DropdownList addListener(ControlListener) 
- controlP5.Controller : DropdownList addListenerFor(int, CallbackListener) 
- controlP5.Controller : DropdownList align(int, int, int, int) 
- controlP5.Controller : DropdownList bringToFront() 
- controlP5.Controller : DropdownList bringToFront(ControllerInterface) 
- controlP5.Controller : DropdownList hide() 
- controlP5.Controller : DropdownList linebreak() 
- controlP5.Controller : DropdownList listen(boolean) 
- controlP5.Controller : DropdownList lock() 
- controlP5.Controller : DropdownList onChange(CallbackListener) 
- controlP5.Controller : DropdownList onClick(CallbackListener) 
- controlP5.Controller : DropdownList onDoublePress(CallbackListener) 
- controlP5.Controller : DropdownList onDrag(CallbackListener) 
- controlP5.Controller : DropdownList onDraw(ControllerView) 
- controlP5.Controller : DropdownList onEndDrag(CallbackListener) 
- controlP5.Controller : DropdownList onEnter(CallbackListener) 
- controlP5.Controller : DropdownList onLeave(CallbackListener) 
- controlP5.Controller : DropdownList onMove(CallbackListener) 
- controlP5.Controller : DropdownList onPress(CallbackListener) 
- controlP5.Controller : DropdownList onRelease(CallbackListener) 
- controlP5.Controller : DropdownList onReleaseOutside(CallbackListener) 
- controlP5.Controller : DropdownList onStartDrag(CallbackListener) 
- controlP5.Controller : DropdownList onWheel(CallbackListener) 
- controlP5.Controller : DropdownList plugTo(Object) 
- controlP5.Controller : DropdownList plugTo(Object, String) 
- controlP5.Controller : DropdownList plugTo(Object[]) 
- controlP5.Controller : DropdownList plugTo(Object[], String) 
- controlP5.Controller : DropdownList registerProperty(String) 
- controlP5.Controller : DropdownList registerProperty(String, String) 
- controlP5.Controller : DropdownList registerTooltip(String) 
- controlP5.Controller : DropdownList removeBehavior() 
- controlP5.Controller : DropdownList removeCallback() 
- controlP5.Controller : DropdownList removeCallback(CallbackListener) 
- controlP5.Controller : DropdownList removeListener(ControlListener) 
- controlP5.Controller : DropdownList removeListenerFor(int, CallbackListener) 
- controlP5.Controller : DropdownList removeListenersFor(int) 
- controlP5.Controller : DropdownList removeProperty(String) 
- controlP5.Controller : DropdownList removeProperty(String, String) 
- controlP5.Controller : DropdownList setArrayValue(float[]) 
- controlP5.Controller : DropdownList setArrayValue(int, float) 
- controlP5.Controller : DropdownList setBehavior(ControlBehavior) 
- controlP5.Controller : DropdownList setBroadcast(boolean) 
- controlP5.Controller : DropdownList setCaptionLabel(String) 
- controlP5.Controller : DropdownList setColor(CColor) 
- controlP5.Controller : DropdownList setColorActive(int) 
- controlP5.Controller : DropdownList setColorBackground(int) 
- controlP5.Controller : DropdownList setColorCaptionLabel(int) 
- controlP5.Controller : DropdownList setColorForeground(int) 
- controlP5.Controller : DropdownList setColorLabel(int) 
- controlP5.Controller : DropdownList setColorValue(int) 
- controlP5.Controller : DropdownList setColorValueLabel(int) 
- controlP5.Controller : DropdownList setDecimalPrecision(int) 
- controlP5.Controller : DropdownList setDefaultValue(float) 
- controlP5.Controller : DropdownList setHeight(int) 
- controlP5.Controller : DropdownList setId(int) 
- controlP5.Controller : DropdownList setImage(PImage) 
- controlP5.Controller : DropdownList setImage(PImage, int) 
- controlP5.Controller : DropdownList setImages(PImage, PImage, PImage) 
- controlP5.Controller : DropdownList setImages(PImage, PImage, PImage, PImage) 
- controlP5.Controller : DropdownList setLabel(String) 
- controlP5.Controller : DropdownList setLabelVisible(boolean) 
- controlP5.Controller : DropdownList setLock(boolean) 
- controlP5.Controller : DropdownList setMax(float) 
- controlP5.Controller : DropdownList setMin(float) 
- controlP5.Controller : DropdownList setMouseOver(boolean) 
- controlP5.Controller : DropdownList setMoveable(boolean) 
- controlP5.Controller : DropdownList setPosition(float, float) 
- controlP5.Controller : DropdownList setPosition(float[]) 
- controlP5.Controller : DropdownList setSize(PImage) 
- controlP5.Controller : DropdownList setSize(int, int) 
- controlP5.Controller : DropdownList setStringValue(String) 
- controlP5.Controller : DropdownList setUpdate(boolean) 
- controlP5.Controller : DropdownList setValue(float) 
- controlP5.Controller : DropdownList setValueLabel(String) 
- controlP5.Controller : DropdownList setValueSelf(float) 
- controlP5.Controller : DropdownList setView(ControllerView) 
- controlP5.Controller : DropdownList setVisible(boolean) 
- controlP5.Controller : DropdownList setWidth(int) 
- controlP5.Controller : DropdownList show() 
- controlP5.Controller : DropdownList unlock() 
- controlP5.Controller : DropdownList unplugFrom(Object) 
- controlP5.Controller : DropdownList unplugFrom(Object[]) 
- controlP5.Controller : DropdownList unregisterTooltip() 
- controlP5.Controller : DropdownList update() 
- controlP5.Controller : DropdownList updateSize() 
- controlP5.Controller : Label getCaptionLabel() 
- controlP5.Controller : Label getValueLabel() 
- controlP5.Controller : List getControllerPlugList() 
- controlP5.Controller : Pointer getPointer() 
- controlP5.Controller : String getAddress() 
- controlP5.Controller : String getInfo() 
- controlP5.Controller : String getName() 
- controlP5.Controller : String getStringValue() 
- controlP5.Controller : String toString() 
- controlP5.Controller : Tab getTab() 
- controlP5.Controller : boolean isActive() 
- controlP5.Controller : boolean isBroadcast() 
- controlP5.Controller : boolean isInside() 
- controlP5.Controller : boolean isLabelVisible() 
- controlP5.Controller : boolean isListening() 
- controlP5.Controller : boolean isLock() 
- controlP5.Controller : boolean isMouseOver() 
- controlP5.Controller : boolean isMousePressed() 
- controlP5.Controller : boolean isMoveable() 
- controlP5.Controller : boolean isUpdate() 
- controlP5.Controller : boolean isVisible() 
- controlP5.Controller : float getArrayValue(int) 
- controlP5.Controller : float getDefaultValue() 
- controlP5.Controller : float getMax() 
- controlP5.Controller : float getMin() 
- controlP5.Controller : float getValue() 
- controlP5.Controller : float[] getAbsolutePosition() 
- controlP5.Controller : float[] getArrayValue() 
- controlP5.Controller : float[] getPosition() 
- controlP5.Controller : int getDecimalPrecision() 
- controlP5.Controller : int getHeight() 
- controlP5.Controller : int getId() 
- controlP5.Controller : int getWidth() 
- controlP5.Controller : int listenerSize() 
- controlP5.Controller : void remove() 
- controlP5.Controller : void setView(ControllerView, int) 
- controlP5.DropdownList : DropdownList addItem(String, Object) 
- controlP5.DropdownList : DropdownList addItems(List) 
- controlP5.DropdownList : DropdownList addItems(Map) 
- controlP5.DropdownList : DropdownList addItems(String[]) 
- controlP5.DropdownList : DropdownList clear() 
- controlP5.DropdownList : DropdownList close() 
- controlP5.DropdownList : DropdownList open() 
- controlP5.DropdownList : DropdownList removeItem(String) 
- controlP5.DropdownList : DropdownList removeItems(List) 
- controlP5.DropdownList : DropdownList setBackgroundColor(int) 
- controlP5.DropdownList : DropdownList setBarHeight(int) 
- controlP5.DropdownList : DropdownList setBarVisible(boolean) 
- controlP5.DropdownList : DropdownList setItemHeight(int) 
- controlP5.DropdownList : DropdownList setItems(List) 
- controlP5.DropdownList : DropdownList setItems(Map) 
- controlP5.DropdownList : DropdownList setItems(String[]) 
- controlP5.DropdownList : DropdownList setOpen(boolean) 
- controlP5.DropdownList : DropdownList setScrollSensitivity(float) 
- controlP5.DropdownList : DropdownList setType(int) 
- controlP5.DropdownList : List getItems() 
- controlP5.DropdownList : Map getItem(String) 
- controlP5.DropdownList : Map getItem(int) 
- controlP5.DropdownList : boolean isBarVisible() 
- controlP5.DropdownList : boolean isOpen() 
- controlP5.DropdownList : int getBackgroundColor() 
- controlP5.DropdownList : int getBarHeight() 
- controlP5.DropdownList : int getHeight() 
- controlP5.DropdownList : void controlEvent(ControlEvent) 
- controlP5.DropdownList : void keyEvent(KeyEvent) 
- controlP5.DropdownList : void setDirection(int) 
- controlP5.DropdownList : void updateItemIndexOffset() 
- java.lang.Object : String toString() 
- java.lang.Object : boolean equals(Object) 
- 
- created: 2015/03/24 12:21:05
- 
- */
+void dropEvent(DropEvent theDropEvent) {
+
+  // if the dropped object is an image, then 
+  // load the image into our PImage.
+  if (theDropEvent.isFile()) {
+
+    m = theDropEvent.loadImage();
+  }
+}
