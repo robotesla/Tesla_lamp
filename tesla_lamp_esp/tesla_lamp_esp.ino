@@ -34,7 +34,7 @@ const char *soft_ap_password = "12345678";
 void setup()
 {
 
-  Serial.begin(250000);
+  Serial.begin(115200);
   Serial.setTimeout(3);
   delay(10);
   pixels.begin();
@@ -130,7 +130,7 @@ void loop()
       LED[i] = sub.toInt();
     }
     pixels.setPixelColor(LED[0], pixels.Color(LED[1], LED[2], LED[3], LED[4]));
-//    Serial.println(incomingString);
+    Serial.println(incomingString);
 
   }
   if (LED[0] == 299)
