@@ -18,7 +18,7 @@
 import controlP5.*;
 import processing.serial.*;
 import drop.*;
-
+import milchreis.imageprocessing.*;
 ControlP5 cp5;
 DropdownList d1;
 //ColorPicker cp;
@@ -49,7 +49,7 @@ color[] LED = new color[Max];
 color[] LED_PIC = new color[Max*5];
 
 void setup() {
-  size(1000, 400 );
+  size(700, 400 );
   drop = new SDrop(this);
 
   for (int i = 0; i<Max; i++)
@@ -96,6 +96,8 @@ void setup() {
     .setSize(300, 300)
     .setColorValue(color(255, 128, 0, 128))
     ;
+
+
 
   label_com = cp5.addTextlabel("label")
     .setText("Disconnected")
@@ -151,7 +153,7 @@ void write_line()
         s = str((j+1)*60-i-1)+","+int(red(LED[i]))+","+int(green(LED[i]))+","+int(blue(LED[i]))+","+int(alpha(LED[i]))+".";
       }
       myPort.write(s);
-      delay(10);
+      delay(6);
       print("read:");
       println(myPort.readString());
       //print("i:");print(i);
@@ -179,7 +181,7 @@ void write_pic()
         s = str(i+j*60)+","+int(red(LED_PIC[(j+1)*60-i-1]))+","+int(green(LED_PIC[(j+1)*60-i-1]))+","+int(blue(LED_PIC[(j+1)*60-i-1]))+","+int(0)+".";
       }
       myPort.write(s);
-      delay(10);
+      delay(6);
       print("read:");
       println(myPort.readString());
       //print("i:");print(i);
@@ -204,7 +206,7 @@ void update_color()
       {
         //println("i:"+str(i)+"j:"+str(j));
         //println("(i*60)+j = "+str((i*60)+j));
-        color c = m.get(i, j);
+        color c = m.get(i, Max-j);
         //println("LED_PIC["+str((i*60)+j)+"]");
         LED_PIC[(i*60)+j] = color(c);
         println(LED_PIC[(i*60)+j]);
@@ -294,10 +296,16 @@ void draw() {
     rect(70+i*8, 320, 3, 30);
 
     if (m !=null) {
+      
+      float in = map(a, 0, 255, -1.0f, 1.0f);
+      m = AutoBalance.apply(m);
+      m = Saturation.apply(m, 1.0);
+      m = Contrast.apply(m, 0.2);
       m.resize(5, 60);
-      //v = m;
       //v.resize(20, 60);
-      image(m, 10, 10);
+      PImage lbb = m.copy();
+      lbb.resize(40, 200);
+      image(lbb, 10, 10);
     }
   }
 }
@@ -307,7 +315,8 @@ void dropEvent(DropEvent theDropEvent) {
   // if the dropped object is an image, then 
   // load the image into our PImage.
   if (theDropEvent.isFile()) {
-
-    m = theDropEvent.loadImage();
+    PImage load = theDropEvent.loadImage();
+    delay(100);
+    m = load;
   }
 }
