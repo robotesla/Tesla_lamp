@@ -38,6 +38,7 @@ void setup()
   Serial.setTimeout(3);
   delay(10);
   pixels.begin();
+  pixels.setBrightness(127);
   //  // We start by connecting to a WiFi network
   //  WiFi.mode(WIFI_MODE_APSTA);
   //  WiFi.softAP(soft_ap_ssid, soft_ap_password);
