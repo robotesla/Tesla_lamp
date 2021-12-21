@@ -25,12 +25,13 @@ DropdownList d1;
 Button b1;
 Button b2;
 Button b3;
+Button b4;
 ColorPicker cw;
 Textlabel label_com;
 Range range;
 SDrop drop;
 Serial myPort;  // Create object from Serial class
-
+Textfield file_name;
 
 int r = 0;
 int g = 0;
@@ -91,6 +92,12 @@ void setup() {
     .setSize(100, 19)
     ;
 
+  b4 = cp5.addButton("SAVE_FILE!")
+    //.setValue(0)
+    .setPosition(0, 170)
+    .setSize(100, 19)
+    ;
+
   cw = cp5.addColorPicker("picker")
     .setPosition(250, 100)
     .setSize(300, 300)
@@ -120,7 +127,15 @@ void setup() {
     .showTickMarks(true)
     // after the initialization we turn broadcast back on again
     .setBroadcast(true)
+    ;
 
+  PFont font = createFont("arial", 15);
+  file_name = cp5.addTextfield("file_name")
+    .setPosition(400, 10)
+    .setSize(200, 20)
+    .setFont(font)
+    .setFocus(true)
+    .setColor(color(255, 255, 255))
     ;
 }
 
@@ -296,7 +311,7 @@ void draw() {
     rect(70+i*8, 320, 3, 30);
 
     if (m !=null) {
-      
+
       float in = map(a, 0, 255, -1.0f, 1.0f);
       m = AutoBalance.apply(m);
       m = Saturation.apply(m, 1.0);
