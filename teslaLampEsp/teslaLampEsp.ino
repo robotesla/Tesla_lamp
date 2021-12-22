@@ -120,28 +120,61 @@ String getValue(String data, char separator, int index)
 void show_image(uint16_t (*array)[4])
 {
   for (int i = 0; i < 300; i++)
-    {
-      pixels.setPixelColor(i, pixels.Color(array[i][0], array[i][1], array[i][2], array[i][3]));
-    }
-    pixels.show();
+  {
+    pixels.setPixelColor(i, pixels.Color(array[i][0], array[i][1], array[i][2], array[i][3]));
+  }
+  pixels.show();
 }
 
 void change_image(uint16_t (*f_img)[4], uint16_t (*s_img)[4], int time = 3000)
 {
   int steps = 500;
-  for(int i = 0; i < steps; i++)
+  for (int i = 0; i < steps; i++)
   {
     for (int j = 0; j < 300; j++)
     {
-      float r = f_img[j][0] + (s_img[j][0] - f_img[j][0])*i/steps;
-      float g = f_img[j][1] + (s_img[j][1] - f_img[j][1])*i/steps;
-      float b = f_img[j][2] + (s_img[j][2] - f_img[j][2])*i/steps;
-      float w = f_img[j][3] + (s_img[j][3] - f_img[j][3])*i/steps;
+      float r = f_img[j][0] + (s_img[j][0] - f_img[j][0]) * i / steps;
+      float g = f_img[j][1] + (s_img[j][1] - f_img[j][1]) * i / steps;
+      float b = f_img[j][2] + (s_img[j][2] - f_img[j][2]) * i / steps;
+      float w = f_img[j][3] + (s_img[j][3] - f_img[j][3]) * i / steps;
       pixels.setPixelColor(j, r, g, b, w);
     }
     pixels.show();
-    delay(time/500);
+    delay(time / 500);
   }
+}
+
+void play_snow(int speed = 1, int time = 1000)
+{
+  int x[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  for (int i = 29; i >= 0; i--)
+  {
+    pixels.fill(pixels.Color(0, 0, 0, 2), 0, 299);
+    for (int k = 0; k < 10; k++)
+    {
+      x[k] += random(-1, 2);
+      x[k] = constrain(x[k], 0, 10);
+      pixels.setPixelColor(getXY(x[k], (i+(k*3))%30), 0, 0, 150, 0);
+    }
+    pixels.show();
+    delay(200);
+  }
+}
+
+int getXY(uint8_t x, uint8_t y)
+{
+  int num = 0;
+  if (x % 2)
+  {
+    num = ((x + 1) * 30) - y - 1;
+  }
+  else
+  {
+    num = (x * 30) + y;
+  } //num = (x*30)+y;
+  //((x+1)*60)-y;}
+
+  return num;
 }
 
 void loop()
@@ -171,24 +204,23 @@ void loop()
   // pixels.clear();
   // pixels.show();
 
-  uint16_t one_pic[300][4];
-  uint16_t two_pic[300][4];
+  // uint16_t one_pic[300][4];
+  // uint16_t two_pic[300][4];
 
-  for (int j = 1; j < 8; j++) //просмотр всех изображений
-  {
-    String filename_one = String("/")+String(j)+String(".txt");
-    String filename_two = String("/")+String(j+1)+String(".txt");
-    read_file(one_pic, SPIFFS, filename_one.c_str());
-    read_file(two_pic, SPIFFS, filename_two.c_str());
+  // for (int j = 1; j < 8; j++) //просмотр всех изображений
+  // {
+  //   String filename_one = String("/")+String(j)+String(".txt");
+  //   String filename_two = String("/")+String(j+1)+String(".txt");
+  //   read_file(one_pic, SPIFFS, filename_one.c_str());
+  //   read_file(two_pic, SPIFFS, filename_two.c_str());
 
-    change_image(one_pic,two_pic,1000);
-  }
+  //   change_image(one_pic,two_pic,1000);
+  // }
 
-  read_file(one_pic, SPIFFS, "/8.txt");
-  read_file(two_pic, SPIFFS, "/1.txt");
+  // read_file(one_pic, SPIFFS, "/8.txt");
+  // read_file(two_pic, SPIFFS, "/1.txt");
 
-  change_image(one_pic,two_pic,1000);
-  // change_image(two_pic,one_pic);
+  // change_image(one_pic,two_pic,1000);
 
-
+  play_snow();
 }
