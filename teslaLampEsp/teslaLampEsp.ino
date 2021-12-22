@@ -9,15 +9,13 @@
 #include "FS.h"
 #include "SPIFFS.h"
 
-#define PIN        4 // On Trinket or Gemma, suggest changing this to 1
+#define PIN 4 // On Trinket or Gemma, suggest changing this to 1
 
 #define NUMPIXELS 300 // Popular NeoPixel ring size
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRBW + NEO_KHZ800);
 
 String message;
-
-
 
 // Определение NTP-клиента для получения времени
 WiFiUDP ntpUDP;
@@ -27,8 +25,8 @@ WiFiServer server(80);
 char lineBuf[80];
 int charCount = 0;
 
-const char* wifi_network_ssid = "Pixel_4513";
-const char* wifi_network_password =  "87654321";
+const char *wifi_network_ssid = "Pixel_4513";
+const char *wifi_network_password = "87654321";
 
 const char *soft_ap_ssid = "Tesla_lamp";
 const char *soft_ap_password = "12345678";
@@ -41,7 +39,8 @@ void setup()
   delay(10);
   pixels.begin();
   pixels.setBrightness(127);
-  if (!SPIFFS.begin()) {
+  if (!SPIFFS.begin())
+  {
     Serial.println("SPIFFS Mount Failed");
     return;
   }
@@ -70,63 +69,83 @@ void setup()
   //  delay(500);
 }
 
+void read_file(uint16_t (*array)[4], fs::FS &fs, const char *path)
+{
+
+  // static int array[300][4];
+
+  Serial.printf("Reading file: %s\r\n", path);
+  File file = fs.open(path);
+
+  uint16_t LED[5] = {0, 255, 0, 0, 0};
+  while (file.available())
+  {
+    String incomingString = file.readStringUntil('\n');
+    // Serial.println("read_string");
+    // Serial.println(incomingString);
+    for (int i = 0; i < 5; i++)
+    {
+      String sub = getValue(incomingString, ',', i);
+      LED[i] = sub.toInt();
+    }
+    //pixels.setPixelColor(LED[0], pixels.Color(LED[1], LED[2], LED[3], LED[4]));
+    array[LED[0]][0] = LED[1];
+    array[LED[0]][1] = LED[2];
+    array[LED[0]][2] = LED[3];
+    array[LED[0]][3] = LED[4];
+  }
+  file.close();
+  // pixels.show();
+}
+
+String getValue(String data, char separator, int index)
+{
+  int found = 0;
+  int strIndex[] = {0, -1};
+  int maxIndex = data.length() - 1;
+
+  for (int i = 0; i <= maxIndex && found <= index; i++)
+  {
+    if (data.charAt(i) == separator || i == maxIndex)
+    {
+      found++;
+      strIndex[0] = strIndex[1] + 1;
+      strIndex[1] = (i == maxIndex) ? i + 1 : i;
+    }
+  }
+
+  return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+
+void show_image(uint16_t (*array)[4])
+{
+  for (int i = 0; i < 300; i++)
+    {
+      pixels.setPixelColor(i, pixels.Color(array[i][0], array[i][1], array[i][2], array[i][3]));
+    }
+    pixels.show();
+}
+
+void change_image(uint16_t (*f_img)[4], uint16_t (*s_img)[4], int time = 3000)
+{
+  int steps = 500;
+  for(int i = 0; i < steps; i++)
+  {
+    for (int j = 0; j < 300; j++)
+    {
+      float r = f_img[j][0] + (s_img[j][0] - f_img[j][0])*i/steps;
+      float g = f_img[j][1] + (s_img[j][1] - f_img[j][1])*i/steps;
+      float b = f_img[j][2] + (s_img[j][2] - f_img[j][2])*i/steps;
+      float w = f_img[j][3] + (s_img[j][3] - f_img[j][3])*i/steps;
+      pixels.setPixelColor(j, r, g, b, w);
+    }
+    pixels.show();
+    delay(time/500);
+  }
+}
 
 void loop()
 {
-  //delay(10);
-  //  Serial.println("Connecting to NTP");
-  //  Serial.print(timeClient.getHours());
-  //  Serial.print(":");
-  //  Serial.print(timeClient.getMinutes());
-  //  Serial.print(":");
-  //  Serial.println(timeClient.getSeconds());
-  //  Serial.println(timeClient.getFormattedTime());
-
-
-  //  WiFiClient client = server.available(); // прослушка входящих клиентов
-  //  if (client) {
-  //    Serial.println("New client");
-  //    timeClient.update();
-  //    memset(lineBuf, 0, sizeof(lineBuf));
-  //    charCount = 0;
-  //    // HTTP-запрос заканчивается пустой строкой
-  //    boolean currentLineIsBlank = true;
-  //    while (client.connected()) {
-  //      Serial.println("client.connected()");
-  //      client.println("HTTP/1.1 200 OK");
-  //      client.println("Content-Type: text/html");
-  //      client.println("Connection: close");
-  //      client.println();
-  //
-  //      // формируем веб-страницу
-  //      String webPage = "<!DOCTYPE HTML>";
-  //      webPage += "<html>";
-  //      webPage += "<head>";
-  //      webPage += "<meta name=\"viewport\" content=\"width=device-width,";
-  //      webPage += "initial-scale=1\">";
-  //      webPage += "</head>";
-  //      webPage += "<body>";
-  //      webPage += "<h1>ESP32 - Web Server</h1>";
-  //      webPage += "<p>Hours:";
-  //      webPage +=    timeClient.getHours();
-  //      webPage += "</p>";
-  //      webPage += "<p>Minutes:";
-  //      webPage +=    timeClient.getMinutes();
-  //      webPage += "</p>";
-  //      webPage += "<p>Seconds";
-  //      webPage +=    timeClient.getSeconds();
-  //      webPage += "</p>";
-  //      webPage += "</body></html>";
-  //      client.println(webPage);
-  //      break;
-  //    }
-  //    // Даём веб-браузеру время для получения данных
-  //    delay(1000);
-  //    // Закрываем соединение
-  //    client.stop();
-  //    Serial.println("client disconnected");
-  //  }
-
   //  int LED[5] = {0, 255, 0, 0, 0};
   //  while (Serial.available())
   //  {
@@ -149,59 +168,27 @@ void loop()
   //    pixels.show();
   //    delay(10);
   //  }
-  file_to_strip(SPIFFS, "/1.txt");
-  delay(2000);
-  file_to_strip(SPIFFS, "/2.txt");
-  delay(2000);
-  file_to_strip(SPIFFS, "/3.txt");
-  delay(2000);
-  file_to_strip(SPIFFS, "/4.txt");
-  delay(2000);
-  file_to_strip(SPIFFS, "/5.txt");
-  delay(2000);
+  // pixels.clear();
+  // pixels.show();
 
-}
+  uint16_t one_pic[300][4];
+  uint16_t two_pic[300][4];
 
-void file_to_strip(fs::FS &fs, const char * path)
-{
-  Serial.printf("Reading file: %s\r\n", path);
-  File file = fs.open(path);
-
-  int LED[5] = {0, 255, 0, 0, 0};
-  while (file.available())
+  for (int j = 1; j < 8; j++) //просмотр всех изображений
   {
-//    for(int i = 0; i<)
-    String incomingString = file.readStringUntil('\n');
-    Serial.println("read_string");
-    Serial.println(incomingString);
-    for (int i = 0; i < 5; i++)
-    {
-      String sub = getValue(incomingString, ',', i);
-      LED[i] = sub.toInt();
-    }
-    pixels.setPixelColor(LED[0], pixels.Color(LED[1], LED[2], LED[3], LED[4]));
+    String filename_one = String("/")+String(j)+String(".txt");
+    String filename_two = String("/")+String(j+1)+String(".txt");
+    read_file(one_pic, SPIFFS, filename_one.c_str());
+    read_file(two_pic, SPIFFS, filename_two.c_str());
 
-    delay(10);
-  }
-  file.close();
-  pixels.show();
-  delay(10);
-
-}
-
-String getValue(String data, char separator, int index)
-{
-  int found = 0;
-  int strIndex[] = {0, -1};
-  int maxIndex = data.length() - 1;
-
-  for (int i = 0; i <= maxIndex && found <= index; i++) {
-    if (data.charAt(i) == separator || i == maxIndex) {
-      found++;
-      strIndex[0] = strIndex[1] + 1;
-      strIndex[1] = (i == maxIndex) ? i + 1 : i;
-    }
+    change_image(one_pic,two_pic,1000);
   }
 
-  return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+  read_file(one_pic, SPIFFS, "/8.txt");
+  read_file(two_pic, SPIFFS, "/1.txt");
+
+  change_image(one_pic,two_pic,1000);
+  // change_image(two_pic,one_pic);
+
+
 }
