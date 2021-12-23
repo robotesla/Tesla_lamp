@@ -149,12 +149,12 @@ void play_snow(int speed = 1, int time = 1000)
   int x[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
   for (int i = 29; i >= 0; i--)
   {
-    pixels.fill(pixels.Color(0, 0, 0, 2), 0, 299);
+    pixels.fill(pixels.Color(0, 0, 0, 3), 0, 299);
     for (int k = 0; k < 10; k++)
     {
       x[k] += random(-1, 2);
       x[k] = constrain(x[k], 0, 10);
-      pixels.setPixelColor(getXY(x[k], (i+(k*3))%30), 0, 0, 150, 0);
+      pixels.setPixelColor(getXY(x[k], (i+(k*3))%30), 0, 0, 20, 100);
     }
     pixels.show();
     delay(200);
@@ -179,48 +179,47 @@ int getXY(uint8_t x, uint8_t y)
 
 void loop()
 {
-  //  int LED[5] = {0, 255, 0, 0, 0};
-  //  while (Serial.available())
-  //  {
-  //    String incomingString = Serial.readString();
-  //    for (int i = 0; i < 5; i++)
-  //    {
-  //      String sub = getValue(incomingString, ',', i);
-  //      LED[i] = sub.toInt();
-  //    }
-  //    pixels.setPixelColor(LED[0], pixels.Color(LED[1], LED[2], LED[3], LED[4]));
-  //    Serial.println(incomingString);
-  //
-  //  }
-  //  if (LED[0] == 299)
-  //  {
-  //    //    for (int k = 0; k < 300; k++)
-  //    //    {
-  //    //      Serial.println( pixels.getPixelColor(k));
-  //    //    }
-  //    pixels.show();
-  //    delay(10);
-  //  }
+//   int LED[5] = {0, 255, 0, 0, 0};
+//   while (Serial.available())
+//   {
+//     String incomingString = Serial.readString();
+//     for (int i = 0; i < 5; i++)
+//     {
+//       String sub = getValue(incomingString, ',', i);
+//       LED[i] = sub.toInt();
+//     }
+//     pixels.setPixelColor(LED[0], pixels.Color(LED[1], LED[2], LED[3], LED[4]));
+//     Serial.println(incomingString);
+//  
+//   }
+//   if (LED[0] == 299)
+//   {
+//     //    for (int k = 0; k < 300; k++)
+//     //    {
+//     //      Serial.println( pixels.getPixelColor(k));
+//     //    }
+//     pixels.show();
+//     delay(10);
+//   }
   // pixels.clear();
   // pixels.show();
 
-  // uint16_t one_pic[300][4];
-  // uint16_t two_pic[300][4];
+  uint16_t one_pic[300][4];
+  uint16_t two_pic[300][4];
+  for (int j = 1; j < 8; j++) //просмотр всех изображений
+  {
+    String filename_one = String("/afric")+String(j)+String(".txt");
+    String filename_two = String("/afric")+String(j+1)+String(".txt");
+    read_file(one_pic, SPIFFS, filename_one.c_str());
+    read_file(two_pic, SPIFFS, filename_two.c_str());
 
-  // for (int j = 1; j < 8; j++) //просмотр всех изображений
-  // {
-  //   String filename_one = String("/")+String(j)+String(".txt");
-  //   String filename_two = String("/")+String(j+1)+String(".txt");
-  //   read_file(one_pic, SPIFFS, filename_one.c_str());
-  //   read_file(two_pic, SPIFFS, filename_two.c_str());
-
-  //   change_image(one_pic,two_pic,1000);
-  // }
+    change_image(one_pic,two_pic,3000);
+  }
 
   // read_file(one_pic, SPIFFS, "/8.txt");
   // read_file(two_pic, SPIFFS, "/1.txt");
 
   // change_image(one_pic,two_pic,1000);
 
-  play_snow();
+  // play_snow();
 }

@@ -14,7 +14,7 @@
  * by andreas schlegel, 2012
  * www.sojamo.de/libraries/controlp5
  */
-
+import java.awt.datatransfer.Transferable;
 import controlP5.*;
 import processing.serial.*;
 import drop.*;
@@ -32,6 +32,7 @@ Range range;
 SDrop drop;
 Serial myPort;  // Create object from Serial class
 Textfield file_name;
+PrintWriter output;
 
 int r = 0;
 int g = 0;
@@ -40,24 +41,26 @@ int a = 0;
 
 int numMin = 0;
 int numMax = 10;
-int Max = 60;
+int Max = 30;
+int w_strip = 10;
+int h_strip = 30;
 
 PImage m;
 PImage v;
 String portName;
 
-color[] LED = new color[Max];
-color[] LED_PIC = new color[Max*5];
+color[] LED = new color[h_strip];
+color[] LED_PIC = new color[w_strip*h_strip];
 
 void setup() {
   size(700, 400 );
   drop = new SDrop(this);
 
-  for (int i = 0; i<Max; i++)
+  for (int i = 0; i<h_strip; i++)
   {
     LED[i] = color(r, g, b);
   }
-  for (int i = 0; i<Max*5; i++)
+  for (int i = 0; i<h_strip*w_strip; i++)
   {
     LED_PIC[i] = color(r, g, b);
   }
@@ -155,17 +158,17 @@ void customize(DropdownList ddl) {
 
 void write_line()
 {
-  for (int j = 0; j<5; j++)
+  for (int j = 0; j<w_strip; j++)
   {
-    for (int i = 0; i<Max; i++)
+    for (int i = 0; i<h_strip; i++)
     {
       String s;
       if (j%2==0)
       {
-        s = str(i+j*60)+","+int(red(LED[i]))+","+int(green(LED[i]))+","+int(blue(LED[i]))+","+int(alpha(LED[i]))+".";
+        s = str(i+j*h_strip)+","+int(red(LED[i]))+","+int(green(LED[i]))+","+int(blue(LED[i]))+","+int(alpha(LED[i]))+".";
       } else
       {
-        s = str((j+1)*60-i-1)+","+int(red(LED[i]))+","+int(green(LED[i]))+","+int(blue(LED[i]))+","+int(alpha(LED[i]))+".";
+        s = str((j+1)*h_strip-i-1)+","+int(red(LED[i]))+","+int(green(LED[i]))+","+int(blue(LED[i]))+","+int(alpha(LED[i]))+".";
       }
       myPort.write(s);
       delay(6);
@@ -179,21 +182,44 @@ void write_line()
   }
 }
 
-void write_pic()
+void write_file()
 {
-  for (int j = 0; j<5; j++)
+  output = createWriter(file_name.getText()); 
+  for (int j = 0; j<w_strip; j++)
   {
-    for (int i = 0; i<Max; i++)
+    for (int i = 0; i<h_strip; i++)
     {
       String s;
       if (j%2==0)
       {
-        s = str(i+j*60)+","+int(red(LED_PIC[i+j*60]))+","+int(green(LED_PIC[i+j*60]))+","+int(blue(LED_PIC[i+j*60]))+","+int(0)+"."; 
+        s = str(i+j*h_strip)+","+int(red(LED[i]))+","+int(green(LED[i]))+","+int(blue(LED[i]))+","+int(alpha(LED[i]))+".";
+      } else
+      {
+        s = str((j+1)*h_strip-i-1)+","+int(red(LED[i]))+","+int(green(LED[i]))+","+int(blue(LED[i]))+","+int(alpha(LED[i]))+".";
+      }
+      output.println(s);
+      println(s);
+    }
+  }
+  //output.flush();  // Writes the remaining data to the file
+  output.close();  // Finishes the file
+}
+
+void write_pic()
+{
+  for (int j = 0; j<w_strip; j++)
+  {
+    for (int i = 0; i<h_strip; i++)
+    {
+      String s;
+      if (j%2==0)
+      {
+        s = str(i+j*h_strip)+","+int(red(LED_PIC[i+j*h_strip]))+","+int(green(LED_PIC[i+j*h_strip]))+","+int(blue(LED_PIC[i+j*h_strip]))+","+int(0)+"."; 
         //s = str((j+1)*60-i-1)+","+int(red(LED_PIC[(j+1)*60-i-1]))+","+int(green(LED_PIC[(j+1)*60-i-1]))+","+int(blue(LED_PIC[(j+1)*60-i-1]))+","+int(0)+".";
       } else
       {
         //s = str(i+j*60)+","+int(red(LED_PIC[i+j*60]))+","+int(green(LED_PIC[i+j*60]))+","+int(blue(LED_PIC[i+j*60]))+","+int(0)+".";
-        s = str(i+j*60)+","+int(red(LED_PIC[(j+1)*60-i-1]))+","+int(green(LED_PIC[(j+1)*60-i-1]))+","+int(blue(LED_PIC[(j+1)*60-i-1]))+","+int(0)+".";
+        s = str(i+j*h_strip)+","+int(red(LED_PIC[(j+1)*h_strip-i-1]))+","+int(green(LED_PIC[(j+1)*h_strip-i-1]))+","+int(blue(LED_PIC[(j+1)*h_strip-i-1]))+","+int(0)+".";
       }
       myPort.write(s);
       delay(6);
@@ -215,16 +241,16 @@ void update_color()
     //println(LED[i]);
   }
   if (m !=null) {
-    for (int i = 0; i<5; i++)
+    for (int i = 0; i<w_strip; i++)
     {
-      for (int j = 0; j<Max; j++)
+      for (int j = 0; j<h_strip; j++)
       {
         //println("i:"+str(i)+"j:"+str(j));
         //println("(i*60)+j = "+str((i*60)+j));
-        color c = m.get(i, Max-j);
+        color c = m.get(i, h_strip-j);
         //println("LED_PIC["+str((i*60)+j)+"]");
-        LED_PIC[(i*60)+j] = color(c);
-        println(LED_PIC[(i*60)+j]);
+        LED_PIC[(i*h_strip)+j] = color(c);
+        println(LED_PIC[(i*h_strip)+j]);
       }
     }
   }
@@ -239,10 +265,10 @@ void controlEvent(ControlEvent theEvent) {
     myPort = new Serial(this, portName, 115200);
   }
 
-  if (theEvent.isFrom(b2)) 
+  if (theEvent.isFrom(b4)) 
   {
     //portName = Serial.list()[int(theEvent.getController().getValue())];
-    write_line();
+    write_file();
   }
 
   if (theEvent.isFrom(b2)) 
@@ -316,7 +342,7 @@ void draw() {
       m = AutoBalance.apply(m);
       m = Saturation.apply(m, 1.0);
       m = Contrast.apply(m, 0.2);
-      m.resize(5, 60);
+      m.resize(w_strip, h_strip);
       //v.resize(20, 60);
       PImage lbb = m.copy();
       lbb.resize(40, 200);
@@ -329,6 +355,7 @@ void dropEvent(DropEvent theDropEvent) {
 
   // if the dropped object is an image, then 
   // load the image into our PImage.
+  println("droped");
   if (theDropEvent.isFile()) {
     PImage load = theDropEvent.loadImage();
     delay(100);
